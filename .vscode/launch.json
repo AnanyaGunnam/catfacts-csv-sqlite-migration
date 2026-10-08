@@ -1,0 +1,28 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "MigrateCsvToDb",
+            "request": "launch",
+            "mainClass": "MigrateCsvToDb",
+            "projectName": "cat-facts-jdbc"
+        },
+        {
+            "type": "java",
+            "name": "JdbcCheck",
+            "request": "launch",
+            "mainClass": "JdbcCheck",
+            "projectName": "cat-facts-jdbc"
+        },
+        {
+            "type": "java",
+            "name": "Run Cat Facts API",
+            "request": "launch",
+            "mainClass": "App",
+            "projectName": "cat-facts-jdbc",
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal"
+        }
+    ]
+}
