@@ -12,6 +12,12 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -85,7 +91,7 @@ public class App {
         }
 
         /** Decides which endpoint a request is for. */
-        void route(HttpExchange exchange) throws IOException {
+        void route(HttpExchange exchange) throws IOException, SQLException {
             String method = exchange.getRequestMethod();
             String path = exchange.getRequestURI().getPath();
 
@@ -122,7 +128,20 @@ public class App {
         }
 
         /** GET /facts */
-        void getAllFacts(HttpExchange exchange) throws IOException {
+        void getAllFacts(HttpExchange exchange) throws IOException, SQLException {
+            List<CatFact> CFList = new ArrayList<CatFact>();
+
+            try (Connection conn = DriverManager.getConnection(DB_URL);
+             PreparedStatement stmt = conn.prepareStatement("SELECT id, fact FROM facts ORDER BY id"); 
+             ResultSet rs = stmt.executeQuery()) {
+
+                while (rs.next()) {
+                    CFList.add(new CatFact(rs.getInt("id"), 
+                    rs.getString("fact")));
+                    
+                }
+             }
+
             sendJson(exchange, 200, facts);
         }
 
