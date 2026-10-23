@@ -129,14 +129,14 @@ public class App {
 
         /** GET /facts */
         void getAllFacts(HttpExchange exchange) throws IOException, SQLException {
-            List<CatFact> CFList = new ArrayList<CatFact>();
+            List<CatFact> facts = new ArrayList<CatFact>();
 
             try (Connection conn = DriverManager.getConnection(DB_URL);
              PreparedStatement stmt = conn.prepareStatement("SELECT id, fact FROM facts ORDER BY id"); 
              ResultSet rs = stmt.executeQuery()) {
 
                 while (rs.next()) {
-                    CFList.add(new CatFact(rs.getInt("id"), 
+                    facts.add(new CatFact(rs.getInt("id"), 
                     rs.getString("fact")));
                     
                 }
@@ -146,13 +146,29 @@ public class App {
         }
 
         /** GET /facts/{id} */
-        void getFactById(HttpExchange exchange, int id) throws IOException {
-            for (CatFact fact : facts) {
-                if (fact.id() == id) {
-                    sendJson(exchange, 200, fact);
-                    return;
+        void getFactById(HttpExchange exchange, int id) throws IOException, SQLException {
+            CatFact fact;
+
+            try (Connection conn = DriverManager.getConnection(DB_URL);
+                PreparedStatement stmt = conn.prepareStatement("SELECT id, fact FROM facts WHERE id = ?")) {
+                    
+                    stmt.setInt(1, id);
+
+                    try (ResultSet rs = stmt.executeQuery()) {
+
+                        while(rs.next()) {
+                            if (rs.getInt("id") == id) {
+                                fact = new CatFact(rs.getInt("id"), 
+                                    rs.getString("fact"));
+                                sendJson(exchange, 200, fact);
+                                return;
+                            }
+                        }
+                        
+                    }
                 }
-            }
+
+            
             sendJson(exchange, 404, new ErrorBody("no fact with id " + id));
         }
 
