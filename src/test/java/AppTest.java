@@ -1,10 +1,12 @@
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class AppTest {
-    
+
     
     @Test
     void CatFactKeepsItsData() {
@@ -15,9 +17,8 @@ public class AppTest {
         // Assert for what needs to be tested
         assertEquals(7, fact.id());
         assertEquals("fact7", fact.fact());
-        
-        
     }
+
 
     @Test
     void CatFactsWithSameValuesAreEqual() {
@@ -28,6 +29,7 @@ public class AppTest {
         assertEquals(fact1, fact2);
     }
 
+
     @Test
     void CatFactsWithDiffTextAreNotEqual() {
         App.CatFact fact1 = new App.CatFact(7, "fact7");
@@ -36,6 +38,7 @@ public class AppTest {
 
         assertNotEquals(fact1, fact2);
     }
+
 
     @Test
     void ListFindsFactByValues() {
@@ -46,6 +49,7 @@ public class AppTest {
         assertTrue(facts.contains(new App.CatFact(1, "some text")));
     }
 
+
     @Test
     void NewFactReturnsItsText() {
         App.NewFact fact = new App.NewFact("new fact");
@@ -53,6 +57,7 @@ public class AppTest {
 
         assertEquals("new fact", fact.fact());
     }
+
 
     @Test
     void ErrorBodyReturnsItsMessage() {
@@ -62,6 +67,7 @@ public class AppTest {
         assertEquals("error", error.error());
     }
 
+
     @Test
     void CatFactCanHoldEmptyString() {
         App.CatFact fact = new App.CatFact(1, "");
@@ -70,6 +76,93 @@ public class AppTest {
         assertEquals("", fact.fact());
     }
 
+
+    @Test
+    void serializingCatFact() {
+        App.CatFact fact = new App.CatFact(1, "some text");
+        String json = App.gson.toJson(fact);
+
+
+        assertTrue(json.contains("1"));
+        assertTrue(json.contains("some text"));
+    }
+
+
+    @Test
+    void deserializingJsonIntoNewFact() {
+        String json = "{\"fact\":\"new fact\"}";
+        App.NewFact fact = App.gson.fromJson(json, App.NewFact.class);
+
+
+        assertEquals("new fact", fact.fact());
+
+    }
+
+
+    @Test
+    void FactCanHaveApostrophe() {
+        App.CatFact fact = new App.CatFact(1, "Cats don't dance");
+        String json = App.gson.toJson(fact);
+
+
+        assertTrue(json.contains("'"));
+    }
+
+
+    @Test 
+    void FactCanHaveCommas() {
+        App.CatFact fact = new App.CatFact(9, "Cats, unlike dogs, cannot taste sweetness");
+        String json = App.gson.toJson(fact);
+        App.CatFact newFact = App.gson.fromJson(json, App.CatFact.class);
+
+
+        assertEquals(fact, newFact);
+    }
+
+
+    @Test 
+    void loadFromCsvReadsEveryRowInTheFile() throws IOException {
+        App.loadFromCsv();
+
+
+        assertEquals(10, App.facts.size());
+    }
+
+
+    @Test 
+    void factWithCommasIsStoredWhole() throws IOException {
+        App.loadFromCsv();
+
+        assertEquals("Cats, like people, tend to favor one paw over the other", 
+            App.facts.get(8).fact());
+    }
+
+
+    @Test 
+    void IdsComeFromTheFile() throws IOException {
+        App.loadFromCsv();
+
+        assertEquals(1, App.facts.get(0).id());
+    }
+
+
+    @Test 
+    void nextIDIsHighestIdPlusOne() throws IOException {
+        App.loadFromCsv();
+
+        assertEquals(11, App.nextId);
+    }
+
+
+    // Test failed; final size is 20. I would change loadFromCsv to clear the list before 
+    // loading new facts.
+    @Test 
+    void callingLoadFromCsvTwiceDoesNotDoubleFacts() throws IOException {
+        App.loadFromCsv();
+        App.loadFromCsv();
+
+        assertEquals(10, App.facts.size());
+    }
 
 
 }
