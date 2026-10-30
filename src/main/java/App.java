@@ -19,6 +19,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Cat Facts API, backed by a CSV file.
@@ -115,7 +116,12 @@ public class App {
                 return;
             }
             if (method.equals("GET")) {
-                getFactById(exchange, id);
+                Optional<CatFact> found = findFactById(DB_URL, id);
+                if (found.isPresent()) {
+                    sendJson(exchange, 200, found.get());
+                } else {
+                    sendJson(exchange, 404, new ErrorBody("no fact with id " + id));
+                }
             } else {
                 sendJson(exchange, 405, new ErrorBody("method not allowed"));
             }
@@ -143,10 +149,10 @@ public class App {
         }
 
         /** GET /facts/{id} */
-        void getFactById(HttpExchange exchange, int id) throws IOException, SQLException {
+        Optional<CatFact> findFactById(String dbUrl, int id) throws IOException, SQLException {
             CatFact fact;
 
-            try (Connection conn = DriverManager.getConnection(DB_URL);
+            try (Connection conn = DriverManager.getConnection(dbUrl);
                 PreparedStatement stmt = conn.prepareStatement("SELECT id, fact FROM facts WHERE id = ?")) {
                     
                     stmt.setInt(1, id);
@@ -157,8 +163,8 @@ public class App {
                             if (rs.getInt("id") == id) {
                                 fact = new CatFact(rs.getInt("id"), 
                                     rs.getString("fact"));
-                                sendJson(exchange, 200, fact);
-                                return;
+                                //sendJson(exchange, 200, fact);
+                                return Optional.of(fact);
                             }
                         }
                         
@@ -166,7 +172,8 @@ public class App {
                 }
 
             
-            sendJson(exchange, 404, new ErrorBody("no fact with id " + id));
+            //sendJson(exchange, 404, new ErrorBody("no fact with id " + id));
+            return Optional.empty();
         }
 
         /** POST /facts */
